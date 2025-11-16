@@ -1,0 +1,4552 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CMTVDE Practice Quiz</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7f9fc;
+        }
+
+        /* Custom scrollbar */
+        .question-index-container::-webkit-scrollbar {
+            height: 6px;
+        }
+        .question-index-container::-webkit-scrollbar-thumb {
+            background-color: #cbd5e1;
+            border-radius: 3px;
+        }
+        .question-index-container::-webkit-scrollbar-track {
+            background: #e2e8f0;
+        }
+
+        .option-button {
+            transition: all 0.2s;
+        }
+
+        /* Selected option */
+        .option-selected {
+            background-color: #4f46e5;
+            color: white;
+            box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.25);
+            border: 2px solid #6366f1;
+            transform: scale(1.01);
+        }
+
+        /* Correct */
+        .option-correct {
+            background-color: #22c55e;
+            color: white;
+            border: 2px solid #16a34a;
+            transform: scale(1.01);
+        }
+
+        /* Incorrect */
+        .option-incorrect {
+            background-color: #ef4444;
+            color: white;
+            border: 2px solid #dc2626;
+            transform: scale(1.01);
+        }
+    </style>
+</head>
+
+<body class="min-h-screen flex flex-col items-center p-4">
+
+    <div id="quiz-container" class="w-full max-w-4xl bg-white shadow-2xl rounded-xl p-6 md:p-10 my-8">
+
+        <header class="mb-6 border-b pb-4">
+            <h1 class="text-3xl font-bold text-gray-800">CMTVDE Practice Test</h1>
+            <p class="text-gray-500">Master the material before the final test.</p>
+        </header>
+
+        <div id="question-index-container" class="question-index-container flex overflow-x-auto whitespace-nowrap space-x-2 mb-6 p-2 border rounded-lg bg-gray-50"></div>
+
+        <div id="quiz-view" class="space-y-6">
+            <div id="question-content" class="text-center p-10">Loading questions...</div>
+
+            <div class="flex justify-between items-center pt-6 border-t">
+                <button onclick="handleNavigation(-1)" id="prev-btn"
+                        class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">
+                    Previous
+                </button>
+
+                <button onclick="finishQuiz()" id="finish-btn"
+                        class="hidden px-6 py-3 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700">
+                    Finish Quiz
+                </button>
+
+                <button onclick="handleNavigation(1)" id="next-btn"
+                        class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
+                    Next
+                </button>
+            </div>
+        </div>
+
+        <div id="results-view" class="hidden space-y-8">
+            <h2 class="text-4xl font-bold text-indigo-700 text-center">Quiz Complete!</h2>
+
+            <div class="p-6 bg-indigo-50 rounded-lg shadow-inner flex justify-around">
+                <div class="text-center">
+                    <p class="text-2xl text-gray-600">Your Score</p>
+                    <p id="score-display" class="text-6xl font-extrabold text-indigo-600">--/--</p>
+                </div>
+
+                <div class="text-center">
+                    <p class="text-2xl text-gray-600">Performance</p>
+                    <p id="feedback-message" class="text-3xl font-semibold text-green-600">---</p>
+                </div>
+            </div>
+
+            <h3 class="text-2xl font-semibold">Answer Review</h3>
+            <div id="review-list" class="space-y-8"></div>
+
+            <button onclick="location.reload()" class="w-full py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700">
+                Start New Quiz
+            </button>
+        </div>
+
+    </div>
+
+    <script>
+        /* ------------- LOAD ALL QUESTIONS FROM FILE -------------- */
+        const allQuestionsSource = [
+  {
+    "question_id": 1,
+    "category": "Comunicação",
+    "question_text": "O aspeto mais importante para se obter sucesso quando se pretende estabelecer comunicação é:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Fazer perguntas para esclarecer o ponto de vista da outra pessoa."
+      },
+      {
+        "key": "b",
+        "text": "Ser recetivo ao conteúdo e às emoções da outra pessoa."
+      },
+      {
+        "key": "c",
+        "text": "Ouvir para compreender."
+      },
+      {
+        "key": "d",
+        "text": "Demonstrar sempre concordância."
+      }
+    ],
+    "correct_answer_key": "c"
+  },
+  {
+    "question_id": 2,
+    "category": "Comunicação",
+    "question_text": "Apesar de existirem vários estilos de comunicação devemos utilizar preferencialmente:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Passivo."
+      },
+      {
+        "key": "b",
+        "text": "Agressivo."
+      },
+      {
+        "key": "c",
+        "text": "Assertivo."
+      }
+    ],
+    "correct_answer_key": "c"
+  },
+  {
+    "question_id": 3,
+    "category": "Comunicação",
+    "question_text": "A barreira interna à comunicação está relacionada com:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Má interpretação das palavras."
+      },
+      {
+        "key": "b",
+        "text": "Pressão do tempo."
+      },
+      {
+        "key": "c",
+        "text": "Desinteresse e desmotivação."
+      },
+      {
+        "key": "d",
+        "text": "Estão corretas as respostas a) e c)."
+      }
+    ],
+    "correct_answer_key": "d"
+  },
+  {
+    "question_id": 4,
+    "category": "Competências do Motorista",
+    "question_text": "As competências exigidas para o desempenho da função de motorista são:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Meramente técnicas."
+      },
+      {
+        "key": "b",
+        "text": "Organizacionais e técnicas."
+      },
+      {
+        "key": "c",
+        "text": "Organizacionais, relacionais e técnicas."
+      }
+    ],
+    "correct_answer_key": "c"
+  },
+  {
+    "question_id": 5,
+    "category": "Imagem Profissional",
+    "question_text": "A imagem de um motorista é formada em 30 segundos, dando-se maior importância a:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Comunicação."
+      },
+      {
+        "key": "b",
+        "text": "Aparência."
+      },
+      {
+        "key": "c",
+        "text": "Conhecimento."
+      }
+    ],
+    "correct_answer_key": "b"
+  },
+  {
+    "question_id": 6,
+    "category": "Imagem Profissional",
+    "question_text": "A imagem profissional corresponde à forma como:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Nos vemos a nós próprios."
+      },
+      {
+        "key": "b",
+        "text": "Os outros nos veem."
+      },
+      {
+        "key": "c",
+        "text": "Nos gostamos de ver."
+      }
+    ],
+    "correct_answer_key": "b"
+  },
+  {
+    "question_id": 7,
+    "category": "Autoestima / Desenvolvimento Pessoal",
+    "question_text": "O primeiro passo para a melhoria da autoestima é:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Auto conhecimento."
+      },
+      {
+        "key": "b",
+        "text": "Autocontrolo."
+      },
+      {
+        "key": "c",
+        "text": "Autorregulação."
+      }
+    ],
+    "correct_answer_key": "a"
+  },
+  {
+    "question_id": 8,
+    "category": "Motivação",
+    "question_text": "O termo motivação pode ser definido como:",
+    "options": [
+      {
+        "key": "a",
+        "text": "O processo que dirige o comportamento para os objetivos."
+      },
+      {
+        "key": "b",
+        "text": "O esforço que o indivíduo está disposto a realizar."
+      },
+      {
+        "key": "c",
+        "text": "O processo que dirige o comportamento para os objetivos e o esforço que o indivíduo está disposto a realizar."
+      }
+    ],
+    "correct_answer_key": "c"
+  },
+  {
+    "question_id": 9,
+    "category": "Objetivos",
+    "question_text": "O aspeto mais importante para a obtenção de objetivos é:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Fazer uma avaliação inicial."
+      },
+      {
+        "key": "b",
+        "text": "Estabelecer uma estratégia."
+      },
+      {
+        "key": "c",
+        "text": "Definir um objetivo SMART."
+      }
+    ],
+    "correct_answer_key": "b"
+  },
+  {
+    "question_id": 10,
+    "category": "Gestão de Conflitos",
+    "question_text": "Um dos aspetos importantes na gestão de conflitos é:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Saber ouvir."
+      },
+      {
+        "key": "b",
+        "text": "Ser assertivo."
+      },
+      {
+        "key": "c",
+        "text": "Ambas as respostas estão corretas."
+      }
+    ],
+    "correct_answer_key": "a"
+  },
+  {
+    "question_id": 11,
+    "category": "Relações Interpessoais",
+    "question_text": "Qual das seguintes atitudes é um fator facilitador na relação com o cliente?",
+    "options": [
+      {
+        "key": "a",
+        "text": "O olhar de censura."
+      },
+      {
+        "key": "b",
+        "text": "A postura aberta e acolhedora."
+      },
+      {
+        "key": "c",
+        "text": "A falta de atenção."
+      }
+    ],
+    "correct_answer_key": "b"
+  },
+  {
+    "question_id": 12,
+    "category": "Linguagem Corporal",
+    "question_text": "O nosso corpo comunica de forma clara e inequívoca.",
+    "options": [
+      {
+        "key": "a",
+        "text": "Verdadeiro."
+      },
+      {
+        "key": "b",
+        "text": "Falso."
+      }
+    ],
+    "correct_answer_key": "a"
+  },
+  {
+    "question_id": 13,
+    "category": "Comunicação Não Verbal",
+    "question_text": "O tom de voz e o ritmo da fala fazem parte de que tipo de comunicação:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Verbal."
+      },
+      {
+        "key": "b",
+        "text": "Para verbal."
+      },
+      {
+        "key": "c",
+        "text": "Não verbal."
+      }
+    ],
+    "correct_answer_key": "b"
+  },
+  {
+    "question_id": 14,
+    "category": "Comunicação com Clientes",
+    "question_text": "O primeiro momento do contacto com o cliente é aquele onde deve ser feita a identificação das suas necessidades.",
+    "options": [
+      {
+        "key": "a",
+        "text": "Verdadeiro."
+      },
+      {
+        "key": "b",
+        "text": "Falso."
+      }
+    ],
+    "correct_answer_key": "a"
+  },
+  {
+    "question_id": 15,
+    "category": "Atendimento",
+    "question_text": "O cliente valoriza principalmente no atendimento:",
+    "options": [
+      {
+        "key": "a",
+        "text": "A forma como é atendido."
+      },
+      {
+        "key": "b",
+        "text": "O preço do serviço."
+      },
+      {
+        "key": "c",
+        "text": "A rapidez."
+      }
+    ],
+    "correct_answer_key": "a"
+  },
+  {
+    "question_id": 16,
+    "category": "Acompanhamento do Cliente",
+    "question_text": "O que deve ser feito ao cliente durante o percurso:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Acompanhá-lo."
+      },
+      {
+        "key": "b",
+        "text": "Deixá-lo seguir sozinho."
+      },
+      {
+        "key": "c",
+        "text": "Seguir à distância."
+      }
+    ],
+    "correct_answer_key": "a"
+  },
+  {
+    "question_id": 17,
+    "category": "Condução em Condições Adversas",
+    "question_text": "Em piso molhado o espaço de travagem é maior do que em piso seco.",
+    "options": [
+      {
+        "key": "a",
+        "text": "Verdadeiro."
+      },
+      {
+        "key": "b",
+        "text": "Falso."
+      }
+    ],
+    "correct_answer_key": "b"
+  },
+  {
+    "question_id": 18,
+    "category": "Condutor",
+    "question_text": "Qual das seguintes atitudes é uma qualidade de um bom condutor:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Respeito pelo código da estrada."
+      },
+      {
+        "key": "b",
+        "text": "Postura agressiva e competitiva."
+      },
+      {
+        "key": "c",
+        "text": "Falta de atenção."
+      }
+    ],
+    "correct_answer_key": "a"
+  },
+  {
+    "question_id": 19,
+    "category": "Segurança na Condução",
+    "question_text": "Qual dos seguintes fatores é importante para uma condução segura:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Cinto de segurança e espelhos retrovisores."
+      },
+      {
+        "key": "b",
+        "text": "Verificar pneus."
+      },
+      {
+        "key": "c",
+        "text": "Todas as respostas estão corretas."
+      }
+    ],
+    "correct_answer_key": "c"
+  },
+  {
+    "question_id": 20,
+    "category": "Condução",
+    "question_text": "O que deve ser feito no momento da mudança de direção:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Sinalizar e olhar para os espelhos."
+      },
+      {
+        "key": "b",
+        "text": "Acelerar e guinar."
+      },
+      {
+        "key": "c",
+        "text": "Apenas sinalizar."
+      }
+    ],
+    "correct_answer_key": "a"
+  },
+  {
+    "question_id": 21,
+    "category": "Segurança",
+    "question_text": "As medidas a tomar no caso de um acidente são:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Parar, verificar o local e ajudar os feridos."
+      },
+      {
+        "key": "b",
+        "text": "Continuar a viagem."
+      },
+      {
+        "key": "c",
+        "text": "Pedir ajuda e esperar."
+      }
+    ],
+    "correct_answer_key": "a"
+  },
+  {
+    "question_id": 22,
+    "category": "Comportamento em Acidentes",
+    "question_text": "Em caso de acidente é obrigatório que o condutor preste auxílio aos feridos e avise as autoridades.",
+    "options": [
+      {
+        "key": "a",
+        "text": "Verdadeiro."
+      },
+      {
+        "key": "b",
+        "text": "Falso."
+      }
+    ],
+    "correct_answer_key": "a"
+  },
+  {
+    "question_id": 23,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla TCC:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Transporte de Cargas Congeladas."
+      },
+      {
+        "key": "b",
+        "text": "Transporte de Carroçaria Comercial."
+      },
+      {
+        "key": "c",
+        "text": "Transporte Coletivo de Crianças."
+      }
+    ],
+    "correct_answer_key": "c"
+  },
+  {
+    "question_id": 24,
+    "category": "CMTVDE Topics",
+    "question_text": "Qual o período máximo de validade do cartão de identificação de motorista de TVDE:",
+    "options": [
+      {
+        "key": "a",
+        "text": "3 anos."
+      },
+      {
+        "key": "b",
+        "text": "5 anos."
+      },
+      {
+        "key": "c",
+        "text": "10 anos."
+      }
+    ],
+    "correct_answer_key": "b"
+  },
+  {
+    "question_id": 25,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla TVDE:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Transporte em Veículo Desportivo Especial."
+      },
+      {
+        "key": "b",
+        "text": "Transporte de Velocidade em Desporto."
+      },
+      {
+        "key": "c",
+        "text": "Transporte em Veículo Descaracterizado a partir de Plataforma Eletrónica."
+      }
+    ],
+    "correct_answer_key": "c"
+  },
+  {
+    "question_id": 26,
+    "category": "CMTVDE Topics",
+    "question_text": "É obrigatório que o condutor de TVDE possua um cartão de identificação:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Verdadeiro."
+      },
+      {
+        "key": "b",
+        "text": "Falso."
+      }
+    ],
+    "correct_answer_key": "a"
+  },
+  {
+    "question_id": 27,
+    "category": "CMTVDE Topics",
+    "question_text": "O cartão de identificação de motorista de TVDE é emitido por:",
+    "options": [
+      {
+        "key": "a",
+        "text": "IMT, I.P."
+      },
+      {
+        "key": "b",
+        "text": "Câmara Municipal."
+      },
+      {
+        "key": "c",
+        "text": "Autoridade de Mobilidade e Transportes (AMT)."
+      }
+    ],
+    "correct_answer_key": "a"
+  },
+  {
+    "question_id": 28,
+    "category": "CMTVDE Topics",
+    "question_text": "Qual a validade do certificado de curso de formação do motorista de TVDE?",
+    "options": [
+      {
+        "key": "a",
+        "text": "3 anos."
+      },
+      {
+        "key": "b",
+        "text": "5 anos."
+      },
+      {
+        "key": "c",
+        "text": "Indeterminado."
+      }
+    ],
+    "correct_answer_key": "c"
+  },
+  {
+    "question_id": 29,
+    "category": "CMTVDE Topics",
+    "question_text": "É obrigatório que o veículo TVDE possua um selo de identificação:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Verdadeiro."
+      },
+      {
+        "key": "b",
+        "text": "Falso."
+      }
+    ],
+    "correct_answer_key": "a"
+  },
+  {
+    "question_id": 30,
+    "category": "CMTVDE Topics",
+    "question_text": "O selo de identificação do veículo TVDE é emitido por:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Câmara Municipal."
+      },
+      {
+        "key": "b",
+        "text": "Autoridade de Mobilidade e Transportes (AMT)."
+      },
+      {
+        "key": "c",
+        "text": "IMT, I.P."
+      }
+    ],
+    "correct_answer_key": "c"
+  },
+  {
+    "question_id": 31,
+    "category": "CMTVDE Topics",
+    "question_text": "A licença de TVDE é emitida por:",
+    "options": [
+      {
+        "key": "a",
+        "text": "IMT, I.P."
+      },
+      {
+        "key": "b",
+        "text": "Câmara Municipal."
+      },
+      {
+        "key": "c",
+        "text": "Autoridade de Mobilidade e Transportes (AMT)."
+      }
+    ],
+    "correct_answer_key": "c"
+  },
+  {
+    "question_id": 32,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla OCS:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Organização Coletiva de Segurança."
+      },
+      {
+        "key": "b",
+        "text": "Obras e Construção Sustentável."
+      },
+      {
+        "key": "c",
+        "text": "Órgãos de Consulta e Supervisão."
+      }
+    ],
+    "correct_answer_key": "c"
+  },
+  {
+    "question_id": 33,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla AM:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Auto-Motivação."
+      },
+      {
+        "key": "b",
+        "text": "Abertura de Mercado."
+      },
+      {
+        "key": "c",
+        "text": "Autoridade Municipal."
+      }
+    ],
+    "correct_answer_key": "b"
+  },
+  {
+    "question_id": 34,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla TVDE:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Transporte em Veículo Descaracterizado a partir de Plataforma Eletrónica."
+      },
+      {
+        "key": "b",
+        "text": "Transporte de Veículos Desportivos Especiais."
+      },
+      {
+        "key": "c",
+        "text": "Transporte de Velocidade em Desporto."
+      }
+    ],
+    "correct_answer_key": "a"
+  },
+  {
+    "question_id": 35,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla TCC:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Transporte de Carga e Contentores."
+      },
+      {
+        "key": "b",
+        "text": "Transporte Coletivo de Crianças."
+      },
+      {
+        "key": "c",
+        "text": "Transporte de Carroçaria Comercial."
+      }
+    ],
+    "correct_answer_key": "b"
+  },
+  {
+    "question_id": 36,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla AMT:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Autoridade de Mobilidade e Transportes."
+      },
+      {
+        "key": "b",
+        "text": "Agência Marítima e Terrestre."
+      },
+      {
+        "key": "c",
+        "text": "Associação de Motoristas de Transportes."
+      }
+    ],
+    "correct_answer_key": "a"
+  },
+  {
+    "question_id": 37,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla IMT, I.P.:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Instituto de Mobilidade e dos Transportes, I.P."
+      },
+      {
+        "key": "b",
+        "text": "Instituto Municipal de Turismo, I.P."
+      },
+      {
+        "key": "c",
+        "text": "Instituto de Motivação para o Trabalho, I.P."
+      }
+    ],
+    "correct_answer_key": "a"
+  },
+  {
+    "question_id": 38,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla OCS:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Organização Coletiva de Segurança."
+      },
+      {
+        "key": "b",
+        "text": "Órgãos de Consulta e Supervisão."
+      },
+      {
+        "key": "c",
+        "text": "Obras e Construção Sustentável."
+      }
+    ],
+    "correct_answer_key": "b"
+  },
+  {
+    "question_id": 39,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla AM:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Auto-Motivação."
+      },
+      {
+        "key": "b",
+        "text": "Abertura de Mercado."
+      },
+      {
+        "key": "c",
+        "text": "Autoridade Municipal."
+      }
+    ],
+    "correct_answer_key": "b"
+  },
+  {
+    "question_id": 40,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla TVDE:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Transporte em Veículo Descaracterizado a partir de Plataforma Eletrónica."
+      },
+      {
+        "key": "b",
+        "text": "Transporte de Veículos Desportivos Especiais."
+      },
+      {
+        "key": "c",
+        "text": "Transporte de Velocidade em Desporto."
+      }
+    ],
+    "correct_answer_key": "a"
+  },
+  {
+    "question_id": 41,
+    "category": "CMTVDE Topics",
+    "question_text": "É obrigatório que o condutor de TVDE possua um cartão de identificação:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Verdadeiro."
+      },
+      {
+        "key": "b",
+        "text": "Falso."
+      }
+    ],
+    "correct_answer_key": "a"
+  },
+  {
+    "question_id": 42,
+    "category": "CMTVDE Topics",
+    "question_text": "O cartão de identificação de motorista de TVDE é emitido por:",
+    "options": [
+      {
+        "key": "a",
+        "text": "IMT, I.P."
+      },
+      {
+        "key": "b",
+        "text": "Câmara Municipal."
+      },
+      {
+        "key": "c",
+        "text": "Autoridade de Mobilidade e Transportes (AMT)."
+      }
+    ],
+    "correct_answer_key": "a"
+  },
+  {
+    "question_id": 43,
+    "category": "CMTVDE Topics",
+    "question_text": "Qual o período máximo de validade do cartão de identificação de motorista de TVDE:",
+    "options": [
+      {
+        "key": "a",
+        "text": "3 anos."
+      },
+      {
+        "key": "b",
+        "text": "5 anos."
+      },
+      {
+        "key": "c",
+        "text": "10 anos."
+      }
+    ],
+    "correct_answer_key": "b"
+  },
+  {
+    "question_id": 44,
+    "category": "CMTVDE Topics",
+    "question_text": "Qual a validade do certificado de curso de formação do motorista de TVDE?",
+    "options": [
+      {
+        "key": "a",
+        "text": "3 anos."
+      },
+      {
+        "key": "b",
+        "text": "5 anos."
+      },
+      {
+        "key": "c",
+        "text": "Indeterminado."
+      }
+    ],
+    "correct_answer_key": "c"
+  },
+  {
+    "question_id": 45,
+    "category": "CMTVDE Topics",
+    "question_text": "É obrigatório que o veículo TVDE possua um selo de identificação:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Verdadeiro."
+      },
+      {
+        "key": "b",
+        "text": "Falso."
+      }
+    ],
+    "correct_answer_key": "a"
+  },
+  {
+    "question_id": 46,
+    "category": "CMTVDE Topics",
+    "question_text": "O selo de identificação do veículo TVDE é emitido por:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Câmara Municipal."
+      },
+      {
+        "key": "b",
+        "text": "Autoridade de Mobilidade e Transportes (AMT)."
+      },
+      {
+        "key": "c",
+        "text": "IMT, I.P."
+      }
+    ],
+    "correct_answer_key": "c"
+  },
+  {
+    "question_id": 47,
+    "category": "CMTVDE Topics",
+    "question_text": "A licença de TVDE é emitida por:",
+    "options": [
+      {
+        "key": "a",
+        "text": "IMT, I.P."
+      },
+      {
+        "key": "b",
+        "text": "Câmara Municipal."
+      },
+      {
+        "key": "c",
+        "text": "Autoridade de Mobilidade e Transportes (AMT)."
+      }
+    ],
+    "correct_answer_key": "c"
+  },
+  {
+    "question_id": 48,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla TCC:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Transporte Coletivo de Crianças."
+      },
+      {
+        "key": "b",
+        "text": "Transporte de Carroçaria Comercial."
+      },
+      {
+        "key": "c",
+        "text": "Transporte de Cargas Congeladas."
+      }
+    ],
+    "correct_answer_key": "a"
+  },
+  {
+    "question_id": 49,
+    "category": "CMTVDE Topics",
+    "question_text": "Qual o período máximo de validade do cartão de identificação de motorista de TVDE:",
+    "options": [
+      {
+        "key": "a",
+        "text": "3 anos."
+      },
+      {
+        "key": "b",
+        "text": "5 anos."
+      },
+      {
+        "key": "c",
+        "text": "10 anos."
+      }
+    ],
+    "correct_answer_key": "b"
+  },
+  {
+    "question_id": 50,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla TVDE:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Transporte em Veículo Descaracterizado a partir de Plataforma Eletrónica."
+      },
+      {
+        "key": "b",
+        "text": "Transporte de Velocidade em Desporto."
+      },
+      {
+        "key": "c",
+        "text": "Transporte em Veículo Desportivo Especial."
+      }
+    ],
+    "correct_answer_key": "a"
+  },
+  {
+    "question_id": 51,
+    "category": "CMTVDE Topics",
+    "question_text": "É obrigatório que o condutor de TVDE possua um cartão de identificação:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Verdadeiro."
+      },
+      {
+        "key": "b",
+        "text": "Falso."
+      }
+    ],
+    "correct_answer_key": "b"
+  },
+  {
+    "question_id": 52,
+    "category": "CMTVDE Topics",
+    "question_text": "O cartão de identificação de motorista de TVDE é emitido por:",
+    "options": [
+      {
+        "key": "a",
+        "text": "IMT, I.P."
+      },
+      {
+        "key": "b",
+        "text": "Câmara Municipal."
+      },
+      {
+        "key": "c",
+        "text": "Autoridade de Mobilidade e Transportes (AMT)."
+      }
+    ],
+    "correct_answer_key": "c"
+  },
+  {
+    "question_id": 53,
+    "category": "CMTVDE Topics",
+    "question_text": "Qual a validade do certificado de curso de formação do motorista de TVDE?",
+    "options": [
+      {
+        "key": "a",
+        "text": "3 anos."
+      },
+      {
+        "key": "b",
+        "text": "5 anos."
+      },
+      {
+        "key": "c",
+        "text": "Indeterminado."
+      }
+    ],
+    "correct_answer_key": "a"
+  },
+  {
+    "question_id": 54,
+    "category": "CMTVDE Topics",
+    "question_text": "É obrigatório que o veículo TVDE possua um selo de identificação:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Verdadeiro."
+      },
+      {
+        "key": "b",
+        "text": "Falso."
+      }
+    ],
+    "correct_answer_key": "a"
+  },
+  {
+    "question_id": 55,
+    "category": "CMTVDE Topics",
+    "question_text": "O selo de identificação do veículo TVDE é emitido por:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Câmara Municipal."
+      },
+      {
+        "key": "b",
+        "text": "Autoridade de Mobilidade e Transportes (AMT)."
+      },
+      {
+        "key": "c",
+        "text": "IMT, I.P."
+      }
+    ],
+    "correct_answer_key": "c"
+  },
+  {
+    "question_id": 56,
+    "category": "CMTVDE Topics",
+    "question_text": "A licença de TVDE é emitida por:",
+    "options": [
+      {
+        "key": "a",
+        "text": "IMT, I.P."
+      },
+      {
+        "key": "b",
+        "text": "Câmara Municipal."
+      },
+      {
+        "key": "c",
+        "text": "Autoridade de Mobilidade e Transportes (AMT)."
+      }
+    ],
+    "correct_answer_key": "b"
+  },
+  {
+    "question_id": 57,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla TCC:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Transporte de Cargas Congeladas."
+      },
+      {
+        "key": "b",
+        "text": "Transporte Coletivo de Crianças."
+      },
+      {
+        "key": "c",
+        "text": "Transporte de Carroçaria Comercial."
+      }
+    ],
+    "correct_answer_key": "b"
+  },
+  {
+    "question_id": 58,
+    "category": "CMTVDE Topics",
+    "question_text": "Qual o período máximo de validade do cartão de identificação de motorista de TVDE:",
+    "options": [
+      {
+        "key": "a",
+        "text": "3 anos."
+      },
+      {
+        "key": "b",
+        "text": "5 anos."
+      },
+      {
+        "key": "c",
+        "text": "10 anos."
+      }
+    ],
+    "correct_answer_key": "a"
+  },
+  {
+    "question_id": 59,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla TVDE:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Transporte em Veículo Descaracterizado a partir de Plataforma Eletrónica."
+      },
+      {
+        "key": "b",
+        "text": "Transporte de Velocidade em Desporto."
+      },
+      {
+        "key": "c",
+        "text": "Transporte em Veículo Desportivo Especial."
+      }
+    ],
+    "correct_answer_key": "a"
+  },
+  {
+    "question_id": 60,
+    "category": "CMTVDE Topics",
+    "question_text": "É obrigatório que o condutor de TVDE possua um cartão de identificação:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Verdadeiro."
+      },
+      {
+        "key": "b",
+        "text": "Falso."
+      }
+    ],
+    "correct_answer_key": "d"
+  },
+  {
+    "question_id": 61,
+    "category": "CMTVDE Topics",
+    "question_text": "O cartão de identificação de motorista de TVDE é emitido por:",
+    "options": [
+      {
+        "key": "a",
+        "text": "IMT, I.P."
+      },
+      {
+        "key": "b",
+        "text": "Câmara Municipal."
+      },
+      {
+        "key": "c",
+        "text": "Autoridade de Mobilidade e Transportes (AMT)."
+      }
+    ],
+    "correct_answer_key": "b"
+  },
+  {
+    "question_id": 62,
+    "category": "CMTVDE Topics",
+    "question_text": "Qual a validade do certificado de curso de formação do motorista de TVDE?",
+    "options": [
+      {
+        "key": "a",
+        "text": "3 anos."
+      },
+      {
+        "key": "b",
+        "text": "5 anos."
+      },
+      {
+        "key": "c",
+        "text": "Indeterminado."
+      }
+    ],
+    "correct_answer_key": "a"
+  },
+  {
+    "question_id": 63,
+    "category": "CMTVDE Topics",
+    "question_text": "É obrigatório que o veículo TVDE possua um selo de identificação:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Verdadeiro."
+      },
+      {
+        "key": "b",
+        "text": "Falso."
+      }
+    ],
+    "correct_answer_key": "a"
+  },
+  {
+    "question_id": 64,
+    "category": "CMTVDE Topics",
+    "question_text": "O selo de identificação do veículo TVDE é emitido por:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Câmara Municipal."
+      },
+      {
+        "key": "b",
+        "text": "Autoridade de Mobilidade e Transportes (AMT)."
+      },
+      {
+        "key": "c",
+        "text": "IMT, I.P."
+      }
+    ],
+    "correct_answer_key": "a"
+  },
+  {
+    "question_id": 65,
+    "category": "CMTVDE Topics",
+    "question_text": "A licença de TVDE é emitida por:",
+    "options": [
+      {
+        "key": "a",
+        "text": "IMT, I.P."
+      },
+      {
+        "key": "b",
+        "text": "Câmara Municipal."
+      },
+      {
+        "key": "c",
+        "text": "Autoridade de Mobilidade e Transportes (AMT)."
+      }
+    ],
+    "correct_answer_key": "c"
+  },
+  {
+    "question_id": 66,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla TCC:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Transporte de Cargas Congeladas."
+      },
+      {
+        "key": "b",
+        "text": "Transporte Coletivo de Crianças."
+      },
+      {
+        "key": "c",
+        "text": "Transporte de Carroçaria Comercial."
+      }
+    ],
+    "correct_answer_key": "b"
+  },
+  {
+    "question_id": 67,
+    "category": "CMTVDE Topics",
+    "question_text": "Qual o período máximo de validade do cartão de identificação de motorista de TVDE:",
+    "options": [
+      {
+        "key": "a",
+        "text": "3 anos."
+      },
+      {
+        "key": "b",
+        "text": "5 anos."
+      },
+      {
+        "key": "c",
+        "text": "10 anos."
+      }
+    ],
+    "correct_answer_key": "b"
+  },
+  {
+    "question_id": 68,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla TVDE:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Transporte em Veículo Descaracterizado a partir de Plataforma Eletrónica."
+      },
+      {
+        "key": "b",
+        "text": "Transporte de Velocidade em Desporto."
+      },
+      {
+        "key": "c",
+        "text": "Transporte em Veículo Desportivo Especial."
+      }
+    ],
+    "correct_answer_key": "b"
+  },
+  {
+    "question_id": 69,
+    "category": "CMTVDE Topics",
+    "question_text": "É obrigatório que o condutor de TVDE possua um cartão de identificação:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Verdadeiro."
+      },
+      {
+        "key": "b",
+        "text": "Falso."
+      }
+    ],
+    "correct_answer_key": "b"
+  },
+  {
+    "question_id": 70,
+    "category": "CMTVDE Topics",
+    "question_text": "O cartão de identificação de motorista de TVDE é emitido por:",
+    "options": [
+      {
+        "key": "a",
+        "text": "IMT, I.P."
+      },
+      {
+        "key": "b",
+        "text": "Câmara Municipal."
+      },
+      {
+        "key": "c",
+        "text": "Autoridade de Mobilidade e Transportes (AMT)."
+      }
+    ],
+    "correct_answer_key": "c"
+  },
+  {
+    "question_id": 71,
+    "category": "CMTVDE Topics",
+    "question_text": "Qual a validade do certificado de curso de formação do motorista de TVDE?",
+    "options": [
+      {
+        "key": "a",
+        "text": "3 anos."
+      },
+      {
+        "key": "b",
+        "text": "5 anos."
+      },
+      {
+        "key": "c",
+        "text": "Indeterminado."
+      }
+    ],
+    "correct_answer_key": "b"
+  },
+  {
+    "question_id": 72,
+    "category": "CMTVDE Topics",
+    "question_text": "É obrigatório que o veículo TVDE possua um selo de identificação:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Verdadeiro."
+      },
+      {
+        "key": "b",
+        "text": "Falso."
+      }
+    ],
+    "correct_answer_key": "b"
+  },
+  {
+    "question_id": 73,
+    "category": "CMTVDE Topics",
+    "question_text": "O selo de identificação do veículo TVDE é emitido por:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Câmara Municipal."
+      },
+      {
+        "key": "b",
+        "text": "Autoridade de Mobilidade e Transportes (AMT)."
+      },
+      {
+        "key": "c",
+        "text": "IMT, I.P."
+      }
+    ],
+    "correct_answer_key": "b"
+  },
+  {
+    "question_id": 74,
+    "category": "CMTVDE Topics",
+    "question_text": "A licença de TVDE é emitida por:",
+    "options": [
+      {
+        "key": "a",
+        "text": "IMT, I.P."
+      },
+      {
+        "key": "b",
+        "text": "Câmara Municipal."
+      },
+      {
+        "key": "c",
+        "text": "Autoridade de Mobilidade e Transportes (AMT)."
+      }
+    ],
+    "correct_answer_key": "c"
+  },
+  {
+    "question_id": 75,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla OCS:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Órgãos de Consulta e Supervisão."
+      },
+      {
+        "key": "b",
+        "text": "Organização Coletiva de Segurança."
+      },
+      {
+        "key": "c",
+        "text": "Obras e Construção Sustentável."
+      }
+    ],
+    "correct_answer_key": "c"
+  },
+  {
+    "question_id": 76,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla AM:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Abertura de Mercado."
+      },
+      {
+        "key": "b",
+        "text": "Auto-Motivação."
+      },
+      {
+        "key": "c",
+        "text": "Autoridade Municipal."
+      }
+    ],
+    "correct_answer_key": "a"
+  },
+  {
+    "question_id": 77,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla TVDE:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Transporte em Veículo Descaracterizado a partir de Plataforma Eletrónica."
+      },
+      {
+        "key": "b",
+        "text": "Transporte de Veículos Desportivos Especiais."
+      },
+      {
+        "key": "c",
+        "text": "Transporte de Velocidade em Desporto."
+      }
+    ],
+    "correct_answer_key": "a"
+  },
+  {
+    "question_id": 78,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla TCC:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Transporte de Cargas Congeladas."
+      },
+      {
+        "key": "b",
+        "text": "Transporte Coletivo de Crianças."
+      },
+      {
+        "key": "c",
+        "text": "Transporte de Carroçaria Comercial."
+      }
+    ],
+    "correct_answer_key": "a"
+  },
+  {
+    "question_id": 79,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla AMT:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Autoridade de Mobilidade e Transportes."
+      },
+      {
+        "key": "b",
+        "text": "Agência Marítima e Terrestre."
+      },
+      {
+        "key": "c",
+        "text": "Associação de Motoristas de Transportes."
+      }
+    ],
+    "correct_answer_key": "a"
+  },
+  {
+    "question_id": 80,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla IMT, I.P.:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Instituto de Mobilidade e dos Transportes, I.P."
+      },
+      {
+        "key": "b",
+        "text": "Instituto Municipal de Turismo, I.P."
+      },
+      {
+        "key": "c",
+        "text": "Instituto de Motivação para o Trabalho, I.P."
+      }
+    ],
+    "correct_answer_key": "c"
+  },
+  {
+    "question_id": 81,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla OCS:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Organização Coletiva de Segurança."
+      },
+      {
+        "key": "b",
+        "text": "Obras e Construção Sustentável."
+      },
+      {
+        "key": "c",
+        "text": "Órgãos de Consulta e Supervisão."
+      }
+    ],
+    "correct_answer_key": "a"
+  },
+  {
+    "question_id": 82,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla AM:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Auto-Motivação."
+      },
+      {
+        "key": "b",
+        "text": "Abertura de Mercado."
+      },
+      {
+        "key": "c",
+        "text": "Autoridade Municipal."
+      }
+    ],
+    "correct_answer_key": "b"
+  },
+  {
+    "question_id": 83,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla TVDE:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Transporte em Veículo Descaracterizado a partir de Plataforma Eletrónica."
+      },
+      {
+        "key": "b",
+        "text": "Transporte de Veículos Desportivos Especiais."
+      },
+      {
+        "key": "c",
+        "text": "Transporte de Velocidade em Desporto."
+      }
+    ],
+    "correct_answer_key": "a"
+  },
+  {
+    "question_id": 84,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla TCC:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Transporte de Carga e Contentores."
+      },
+      {
+        "key": "b",
+        "text": "Transporte Coletivo de Crianças."
+      },
+      {
+        "key": "c",
+        "text": "Transporte de Carroçaria Comercial."
+      }
+    ],
+    "correct_answer_key": "a"
+  },
+  {
+    "question_id": 85,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla AMT:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Autoridade de Mobilidade e Transportes."
+      },
+      {
+        "key": "b",
+        "text": "Agência Marítima e Terrestre."
+      },
+      {
+        "key": "c",
+        "text": "Associação de Motoristas de Transportes."
+      }
+    ],
+    "correct_answer_key": "b"
+  },
+  {
+    "question_id": 86,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla IMT, I.P.:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Instituto de Mobilidade e dos Transportes, I.P."
+      },
+      {
+        "key": "b",
+        "text": "Instituto Municipal de Turismo, I.P."
+      },
+      {
+        "key": "c",
+        "text": "Instituto de Motivação para o Trabalho, I.P."
+      }
+    ],
+    "correct_answer_key": "c"
+  },
+  {
+    "question_id": 87,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla OCS:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Órgãos de Consulta e Supervisão."
+      },
+      {
+        "key": "b",
+        "text": "Organização Coletiva de Segurança."
+      },
+      {
+        "key": "c",
+        "text": "Obras e Construção Sustentável."
+      }
+    ],
+    "correct_answer_key": "b"
+  },
+  {
+    "question_id": 88,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla AM:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Abertura de Mercado."
+      },
+      {
+        "key": "b",
+        "text": "Auto-Motivação."
+      },
+      {
+        "key": "c",
+        "text": "Autoridade Municipal."
+      }
+    ],
+    "correct_answer_key": "c"
+  },
+  {
+    "question_id": 89,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla TVDE:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Transporte em Veículo Descaracterizado a partir de Plataforma Eletrónica."
+      },
+      {
+        "key": "b",
+        "text": "Transporte de Veículos Desportivos Especiais."
+      },
+      {
+        "key": "c",
+        "text": "Transporte de Velocidade em Desporto."
+      }
+    ],
+    "correct_answer_key": "b"
+  },
+  {
+    "question_id": 90,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla TCC:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Transporte de Cargas Congeladas."
+      },
+      {
+        "key": "b",
+        "text": "Transporte Coletivo de Crianças."
+      },
+      {
+        "key": "c",
+        "text": "Transporte de Carroçaria Comercial."
+      }
+    ],
+    "correct_answer_key": "c"
+  },
+  {
+    "question_id": 91,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla AMT:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Autoridade de Mobilidade e Transportes."
+      },
+      {
+        "key": "b",
+        "text": "Agência Marítima e Terrestre."
+      },
+      {
+        "key": "c",
+        "text": "Associação de Motoristas de Transportes."
+      }
+    ],
+    "correct_answer_key": "a"
+  },
+  {
+    "question_id": 92,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla IMT, I.P.:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Instituto de Mobilidade e dos Transportes, I.P."
+      },
+      {
+        "key": "b",
+        "text": "Instituto Municipal de Turismo, I.P."
+      },
+      {
+        "key": "c",
+        "text": "Instituto de Motivação para o Trabalho, I.P."
+      }
+    ],
+    "correct_answer_key": "b"
+  },
+  {
+    "question_id": 93,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla OCS:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Organização Coletiva de Segurança."
+      },
+      {
+        "key": "b",
+        "text": "Obras e Construção Sustentável."
+      },
+      {
+        "key": "c",
+        "text": "Órgãos de Consulta e Supervisão."
+      }
+    ],
+    "correct_answer_key": "c"
+  },
+  {
+    "question_id": 94,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla AM:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Auto-Motivação."
+      },
+      {
+        "key": "b",
+        "text": "Abertura de Mercado."
+      },
+      {
+        "key": "c",
+        "text": "Autoridade Municipal."
+      }
+    ],
+    "correct_answer_key": "a"
+  },
+  {
+    "question_id": 95,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla TVDE:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Transporte em Veículo Descaracterizado a partir de Plataforma Eletrónica."
+      },
+      {
+        "key": "b",
+        "text": "Transporte de Veículos Desportivos Especiais."
+      },
+      {
+        "key": "c",
+        "text": "Transporte de Velocidade em Desporto."
+      }
+    ],
+    "correct_answer_key": "c"
+  },
+  {
+    "question_id": 96,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla TCC:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Transporte de Cargas Congeladas."
+      },
+      {
+        "key": "b",
+        "text": "Transporte Coletivo de Crianças."
+      },
+      {
+        "key": "c",
+        "text": "Transporte de Carroçaria Comercial."
+      }
+    ],
+    "correct_answer_key": "c"
+  },
+  {
+    "question_id": 97,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla AMT:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Autoridade de Mobilidade e Transportes."
+      },
+      {
+        "key": "b",
+        "text": "Agência Marítima e Terrestre."
+      },
+      {
+        "key": "c",
+        "text": "Associação de Motoristas de Transportes."
+      }
+    ],
+    "correct_answer_key": "a"
+  },
+  {
+    "question_id": 98,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla IMT, I.P.:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Instituto de Mobilidade e dos Transportes, I.P."
+      },
+      {
+        "key": "b",
+        "text": "Instituto Municipal de Turismo, I.P."
+      },
+      {
+        "key": "c",
+        "text": "Instituto de Motivação para o Trabalho, I.P."
+      }
+    ],
+    "correct_answer_key": "a"
+  },
+  {
+    "question_id": 99,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla OCS:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Órgãos de Consulta e Supervisão."
+      },
+      {
+        "key": "b",
+        "text": "Organização Coletiva de Segurança."
+      },
+      {
+        "key": "c",
+        "text": "Obras e Construção Sustentável."
+      }
+    ],
+    "correct_answer_key": "b"
+  },
+  {
+    "question_id": 100,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla AM:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Abertura de Mercado."
+      },
+      {
+        "key": "b",
+        "text": "Auto-Motivação."
+      },
+      {
+        "key": "c",
+        "text": "Autoridade Municipal."
+      }
+    ],
+    "correct_answer_key": "b"
+  },
+  {
+    "question_id": 101,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla TVDE:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Transporte em Veículo Descaracterizado a partir de Plataforma Eletrónica."
+      },
+      {
+        "key": "b",
+        "text": "Transporte de Veículos Desportivos Especiais."
+      },
+      {
+        "key": "c",
+        "text": "Transporte de Velocidade em Desporto."
+      }
+    ],
+    "correct_answer_key": "c"
+  },
+  {
+    "question_id": 102,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla TCC:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Transporte de Cargas Congeladas."
+      },
+      {
+        "key": "b",
+        "text": "Transporte Coletivo de Crianças."
+      },
+      {
+        "key": "c",
+        "text": "Transporte de Carroçaria Comercial."
+      }
+    ],
+    "correct_answer_key": "a"
+  },
+  {
+    "question_id": 103,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla AMT:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Autoridade de Mobilidade e Transportes."
+      },
+      {
+        "key": "b",
+        "text": "Agência Marítima e Terrestre."
+      },
+      {
+        "key": "c",
+        "text": "Associação de Motoristas de Transportes."
+      }
+    ],
+    "correct_answer_key": "b"
+  },
+  {
+    "question_id": 104,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla IMT, I.P.:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Instituto de Mobilidade e dos Transportes, I.P."
+      },
+      {
+        "key": "b",
+        "text": "Instituto Municipal de Turismo, I.P."
+      },
+      {
+        "key": "c",
+        "text": "Instituto de Motivação para o Trabalho, I.P."
+      }
+    ],
+    "correct_answer_key": "b"
+  },
+  {
+    "question_id": 105,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla OCS:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Organização Coletiva de Segurança."
+      },
+      {
+        "key": "b",
+        "text": "Obras e Construção Sustentável."
+      },
+      {
+        "key": "c",
+        "text": "Órgãos de Consulta e Supervisão."
+      }
+    ],
+    "correct_answer_key": "b"
+  },
+  {
+    "question_id": 106,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla AM:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Auto-Motivação."
+      },
+      {
+        "key": "b",
+        "text": "Abertura de Mercado."
+      },
+      {
+        "key": "c",
+        "text": "Autoridade Municipal."
+      }
+    ],
+    "correct_answer_key": "a"
+  },
+  {
+    "question_id": 107,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla TVDE:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Transporte em Veículo Descaracterizado a partir de Plataforma Eletrónica."
+      },
+      {
+        "key": "b",
+        "text": "Transporte de Veículos Desportivos Especiais."
+      },
+      {
+        "key": "c",
+        "text": "Transporte de Velocidade em Desporto."
+      }
+    ],
+    "correct_answer_key": "b"
+  },
+  {
+    "question_id": 108,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla TCC:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Transporte de Carga e Contentores."
+      },
+      {
+        "key": "b",
+        "text": "Transporte Coletivo de Crianças."
+      },
+      {
+        "key": "c",
+        "text": "Transporte de Carroçaria Comercial."
+      }
+    ],
+    "correct_answer_key": "b"
+  },
+  {
+    "question_id": 109,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla AMT:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Autoridade de Mobilidade e Transportes."
+      },
+      {
+        "key": "b",
+        "text": "Agência Marítima e Terrestre."
+      },
+      {
+        "key": "c",
+        "text": "Associação de Motoristas de Transportes."
+      }
+    ],
+    "correct_answer_key": "a"
+  },
+  {
+    "question_id": 110,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla IMT, I.P.:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Instituto de Mobilidade e dos Transportes, I.P."
+      },
+      {
+        "key": "b",
+        "text": "Instituto Municipal de Turismo, I.P."
+      },
+      {
+        "key": "c",
+        "text": "Instituto de Motivação para o Trabalho, I.P."
+      }
+    ],
+    "correct_answer_key": "c"
+  },
+  {
+    "question_id": 111,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla OCS:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Organização Coletiva de Segurança."
+      },
+      {
+        "key": "b",
+        "text": "Obras e Construção Sustentável."
+      },
+      {
+        "key": "c",
+        "text": "Órgãos de Consulta e Supervisão."
+      }
+    ],
+    "correct_answer_key": "c"
+  },
+  {
+    "question_id": 112,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla AM:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Auto-Motivação."
+      },
+      {
+        "key": "b",
+        "text": "Abertura de Mercado."
+      },
+      {
+        "key": "c",
+        "text": "Autoridade Municipal."
+      }
+    ],
+    "correct_answer_key": "a"
+  },
+  {
+    "question_id": 113,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla TVDE:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Transporte em Veículo Descaracterizado a partir de Plataforma Eletrónica."
+      },
+      {
+        "key": "b",
+        "text": "Transporte de Veículos Desportivos Especiais."
+      },
+      {
+        "key": "c",
+        "text": "Transporte de Velocidade em Desporto."
+      }
+    ],
+    "correct_answer_key": "c"
+  },
+  {
+    "question_id": 114,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla TCC:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Transporte de Cargas Congeladas."
+      },
+      {
+        "key": "b",
+        "text": "Transporte Coletivo de Crianças."
+      },
+      {
+        "key": "c",
+        "text": "Transporte de Carroçaria Comercial."
+      }
+    ],
+    "correct_answer_key": "a"
+  },
+  {
+    "question_id": 115,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla AMT:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Autoridade de Mobilidade e Transportes."
+      },
+      {
+        "key": "b",
+        "text": "Agência Marítima e Terrestre."
+      },
+      {
+        "key": "c",
+        "text": "Associação de Motoristas de Transportes."
+      }
+    ],
+    "correct_answer_key": "c"
+  },
+  {
+    "question_id": 116,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla IMT, I.P.:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Instituto de Mobilidade e dos Transportes, I.P."
+      },
+      {
+        "key": "b",
+        "text": "Instituto Municipal de Turismo, I.P."
+      },
+      {
+        "key": "c",
+        "text": "Instituto de Motivação para o Trabalho, I.P."
+      }
+    ],
+    "correct_answer_key": "c"
+  },
+  {
+    "question_id": 117,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla OCS:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Organização Coletiva de Segurança."
+      },
+      {
+        "key": "b",
+        "text": "Obras e Construção Sustentável."
+      },
+      {
+        "key": "c",
+        "text": "Órgãos de Consulta e Supervisão."
+      }
+    ],
+    "correct_answer_key": "b"
+  },
+  {
+    "question_id": 118,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla AM:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Auto-Motivação."
+      },
+      {
+        "key": "b",
+        "text": "Abertura de Mercado."
+      },
+      {
+        "key": "c",
+        "text": "Autoridade Municipal."
+      }
+    ],
+    "correct_answer_key": "b"
+  },
+  {
+    "question_id": 119,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla TVDE:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Transporte em Veículo Descaracterizado a partir de Plataforma Eletrónica."
+      },
+      {
+        "key": "b",
+        "text": "Transporte de Veículos Desportivos Especiais."
+      },
+      {
+        "key": "c",
+        "text": "Transporte de Velocidade em Desporto."
+      }
+    ],
+    "correct_answer_key": "b"
+  },
+  {
+    "question_id": 120,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla TCC:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Transporte de Carga e Contentores."
+      },
+      {
+        "key": "b",
+        "text": "Transporte Coletivo de Crianças."
+      },
+      {
+        "key": "c",
+        "text": "Transporte de Carroçaria Comercial."
+      }
+    ],
+    "correct_answer_key": "c"
+  },
+  {
+    "question_id": 121,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla AMT:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Autoridade de Mobilidade e Transportes."
+      },
+      {
+        "key": "b",
+        "text": "Agência Marítima e Terrestre."
+      },
+      {
+        "key": "c",
+        "text": "Associação de Motoristas de Transportes."
+      }
+    ],
+    "correct_answer_key": "b"
+  },
+  {
+    "question_id": 122,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla IMT, I.P.:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Instituto de Mobilidade e dos Transportes, I.P."
+      },
+      {
+        "key": "b",
+        "text": "Instituto Municipal de Turismo, I.P."
+      },
+      {
+        "key": "c",
+        "text": "Instituto de Motivação para o Trabalho, I.P."
+      }
+    ],
+    "correct_answer_key": "a"
+  },
+  {
+    "question_id": 123,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla OCS:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Organização Coletiva de Segurança."
+      },
+      {
+        "key": "b",
+        "text": "Obras e Construção Sustentável."
+      },
+      {
+        "key": "c",
+        "text": "Órgãos de Consulta e Supervisão."
+      }
+    ],
+    "correct_answer_key": "b"
+  },
+  {
+    "question_id": 124,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla AM:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Auto-Motivação."
+      },
+      {
+        "key": "b",
+        "text": "Abertura de Mercado."
+      },
+      {
+        "key": "c",
+        "text": "Autoridade Municipal."
+      }
+    ],
+    "correct_answer_key": "b"
+  },
+  {
+    "question_id": 125,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla TVDE:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Transporte em Veículo Descaracterizado a partir de Plataforma Eletrónica."
+      },
+      {
+        "key": "b",
+        "text": "Transporte de Veículos Desportivos Especiais."
+      },
+      {
+        "key": "c",
+        "text": "Transporte de Velocidade em Desporto."
+      }
+    ],
+    "correct_answer_key": "c"
+  },
+  {
+    "question_id": 126,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla TCC:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Transporte de Cargas Congeladas."
+      },
+      {
+        "key": "b",
+        "text": "Transporte Coletivo de Crianças."
+      },
+      {
+        "key": "c",
+        "text": "Transporte de Carroçaria Comercial."
+      }
+    ],
+    "correct_answer_key": "b"
+  },
+  {
+    "question_id": 127,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla AMT:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Autoridade de Mobilidade e Transportes."
+      },
+      {
+        "key": "b",
+        "text": "Agência Marítima e Terrestre."
+      },
+      {
+        "key": "c",
+        "text": "Associação de Motoristas de Transportes."
+      }
+    ],
+    "correct_answer_key": "a"
+  },
+  {
+    "question_id": 128,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla IMT, I.P.:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Instituto de Mobilidade e dos Transportes, I.P."
+      },
+      {
+        "key": "b",
+        "text": "Instituto Municipal de Turismo, I.P."
+      },
+      {
+        "key": "c",
+        "text": "Instituto de Motivação para o Trabalho, I.P."
+      }
+    ],
+    "correct_answer_key": "c"
+  },
+  {
+    "question_id": 129,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla OCS:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Órgãos de Consulta e Supervisão."
+      },
+      {
+        "key": "b",
+        "text": "Organização Coletiva de Segurança."
+      },
+      {
+        "key": "c",
+        "text": "Obras e Construção Sustentável."
+      }
+    ],
+    "correct_answer_key": "b"
+  },
+  {
+    "question_id": 130,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla AM:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Abertura de Mercado."
+      },
+      {
+        "key": "b",
+        "text": "Auto-Motivação."
+      },
+      {
+        "key": "c",
+        "text": "Autoridade Municipal."
+      }
+    ],
+    "correct_answer_key": "a"
+  },
+  {
+    "question_id": 131,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla TVDE:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Transporte em Veículo Descaracterizado a partir de Plataforma Eletrónica."
+      },
+      {
+        "key": "b",
+        "text": "Transporte de Veículos Desportivos Especiais."
+      },
+      {
+        "key": "c",
+        "text": "Transporte de Velocidade em Desporto."
+      }
+    ],
+    "correct_answer_key": "a"
+  },
+  {
+    "question_id": 132,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla TCC:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Transporte de Cargas Congeladas."
+      },
+      {
+        "key": "b",
+        "text": "Transporte Coletivo de Crianças."
+      },
+      {
+        "key": "c",
+        "text": "Transporte de Carroçaria Comercial."
+      }
+    ],
+    "correct_answer_key": "b"
+  },
+  {
+    "question_id": 133,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla AMT:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Autoridade de Mobilidade e Transportes."
+      },
+      {
+        "key": "b",
+        "text": "Agência Marítima e Terrestre."
+      },
+      {
+        "key": "c",
+        "text": "Associação de Motoristas de Transportes."
+      }
+    ],
+    "correct_answer_key": "b"
+  },
+  {
+    "question_id": 134,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla IMT, I.P.:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Instituto de Mobilidade e dos Transportes, I.P."
+      },
+      {
+        "key": "b",
+        "text": "Instituto Municipal de Turismo, I.P."
+      },
+      {
+        "key": "c",
+        "text": "Instituto de Motivação para o Trabalho, I.P."
+      }
+    ],
+    "correct_answer_key": "a"
+  },
+  {
+    "question_id": 135,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla OCS:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Organização Coletiva de Segurança."
+      },
+      {
+        "key": "b",
+        "text": "Obras e Construção Sustentável."
+      },
+      {
+        "key": "c",
+        "text": "Órgãos de Consulta e Supervisão."
+      }
+    ],
+    "correct_answer_key": "a"
+  },
+  {
+    "question_id": 136,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla AM:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Auto-Motivação."
+      },
+      {
+        "key": "b",
+        "text": "Abertura de Mercado."
+      },
+      {
+        "key": "c",
+        "text": "Autoridade Municipal."
+      }
+    ],
+    "correct_answer_key": "a"
+  },
+  {
+    "question_id": 137,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla TVDE:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Transporte em Veículo Descaracterizado a partir de Plataforma Eletrónica."
+      },
+      {
+        "key": "b",
+        "text": "Transporte de Veículos Desportivos Especiais."
+      },
+      {
+        "key": "c",
+        "text": "Transporte de Velocidade em Desporto."
+      }
+    ],
+    "correct_answer_key": "b"
+  },
+  {
+    "question_id": 138,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla TCC:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Transporte de Cargas Congeladas."
+      },
+      {
+        "key": "b",
+        "text": "Transporte Coletivo de Crianças."
+      },
+      {
+        "key": "c",
+        "text": "Transporte de Carroçaria Comercial."
+      }
+    ],
+    "correct_answer_key": "a"
+  },
+  {
+    "question_id": 139,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla AMT:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Autoridade de Mobilidade e Transportes."
+      },
+      {
+        "key": "b",
+        "text": "Agência Marítima e Terrestre."
+      },
+      {
+        "key": "c",
+        "text": "Associação de Motoristas de Transportes."
+      }
+    ],
+    "correct_answer_key": "a"
+  },
+  {
+    "question_id": 140,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla IMT, I.P.:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Instituto de Mobilidade e dos Transportes, I.P."
+      },
+      {
+        "key": "b",
+        "text": "Instituto Municipal de Turismo, I.P."
+      },
+      {
+        "key": "c",
+        "text": "Instituto de Motivação para o Trabalho, I.P."
+      }
+    ],
+    "correct_answer_key": "b"
+  },
+  {
+    "question_id": 141,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla OCS:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Órgãos de Consulta e Supervisão."
+      },
+      {
+        "key": "b",
+        "text": "Organização Coletiva de Segurança."
+      },
+      {
+        "key": "c",
+        "text": "Obras e Construção Sustentável."
+      }
+    ],
+    "correct_answer_key": "c"
+  },
+  {
+    "question_id": 142,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla AM:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Abertura de Mercado."
+      },
+      {
+        "key": "b",
+        "text": "Auto-Motivação."
+      },
+      {
+        "key": "c",
+        "text": "Autoridade Municipal."
+      }
+    ],
+    "correct_answer_key": "a"
+  },
+  {
+    "question_id": 143,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla TVDE:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Transporte em Veículo Descaracterizado a partir de Plataforma Eletrónica."
+      },
+      {
+        "key": "b",
+        "text": "Transporte de Veículos Desportivos Especiais."
+      },
+      {
+        "key": "c",
+        "text": "Transporte de Velocidade em Desporto."
+      }
+    ],
+    "correct_answer_key": "b"
+  },
+  {
+    "question_id": 144,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla TCC:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Transporte de Cargas Congeladas."
+      },
+      {
+        "key": "b",
+        "text": "Transporte Coletivo de Crianças."
+      },
+      {
+        "key": "c",
+        "text": "Transporte de Carroçaria Comercial."
+      }
+    ],
+    "correct_answer_key": "b"
+  },
+  {
+    "question_id": 145,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla AMT:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Autoridade de Mobilidade e Transportes."
+      },
+      {
+        "key": "b",
+        "text": "Agência Marítima e Terrestre."
+      },
+      {
+        "key": "c",
+        "text": "Associação de Motoristas de Transportes."
+      }
+    ],
+    "correct_answer_key": "c"
+  },
+  {
+    "question_id": 146,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla IMT, I.P.:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Instituto de Mobilidade e dos Transportes, I.P."
+      },
+      {
+        "key": "b",
+        "text": "Instituto Municipal de Turismo, I.P."
+      },
+      {
+        "key": "c",
+        "text": "Instituto de Motivação para o Trabalho, I.P."
+      }
+    ],
+    "correct_answer_key": "c"
+  },
+  {
+    "question_id": 147,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla OCS:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Organização Coletiva de Segurança."
+      },
+      {
+        "key": "b",
+        "text": "Obras e Construção Sustentável."
+      },
+      {
+        "key": "c",
+        "text": "Órgãos de Consulta e Supervisão."
+      }
+    ],
+    "correct_answer_key": "a"
+  },
+  {
+    "question_id": 148,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla AM:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Auto-Motivação."
+      },
+      {
+        "key": "b",
+        "text": "Abertura de Mercado."
+      },
+      {
+        "key": "c",
+        "text": "Autoridade Municipal."
+      }
+    ],
+    "correct_answer_key": "a"
+  },
+  {
+    "question_id": 149,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla TVDE:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Transporte em Veículo Descaracterizado a partir de Plataforma Eletrónica."
+      },
+      {
+        "key": "b",
+        "text": "Transporte de Veículos Desportivos Especiais."
+      },
+      {
+        "key": "c",
+        "text": "Transporte de Velocidade em Desporto."
+      }
+    ],
+    "correct_answer_key": "b"
+  },
+  {
+    "question_id": 150,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla TCC:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Transporte de Carga e Contentores."
+      },
+      {
+        "key": "b",
+        "text": "Transporte Coletivo de Crianças."
+      },
+      {
+        "key": "c",
+        "text": "Transporte de Carroçaria Comercial."
+      }
+    ],
+    "correct_answer_key": "a"
+  },
+  {
+    "question_id": 151,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla AMT:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Autoridade de Mobilidade e Transportes."
+      },
+      {
+        "key": "b",
+        "text": "Agência Marítima e Terrestre."
+      },
+      {
+        "key": "c",
+        "text": "Associação de Motoristas de Transportes."
+      }
+    ],
+    "correct_answer_key": "a"
+  },
+  {
+    "question_id": 152,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla IMT, I.P.:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Instituto de Mobilidade e dos Transportes, I.P."
+      },
+      {
+        "key": "b",
+        "text": "Instituto Municipal de Turismo, I.P."
+      },
+      {
+        "key": "c",
+        "text": "Instituto de Motivação para o Trabalho, I.P."
+      }
+    ],
+    "correct_answer_key": "d"
+  },
+  {
+    "question_id": 153,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla OCS:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Organização Coletiva de Segurança."
+      },
+      {
+        "key": "b",
+        "text": "Obras e Construção Sustentável."
+      },
+      {
+        "key": "c",
+        "text": "Órgãos de Consulta e Supervisão."
+      }
+    ],
+    "correct_answer_key": "a"
+  },
+  {
+    "question_id": 154,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla AM:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Auto-Motivação."
+      },
+      {
+        "key": "b",
+        "text": "Abertura de Mercado."
+      },
+      {
+        "key": "c",
+        "text": "Autoridade Municipal."
+      }
+    ],
+    "correct_answer_key": "c"
+  },
+  {
+    "question_id": 155,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla TVDE:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Transporte em Veículo Descaracterizado a partir de Plataforma Eletrónica."
+      },
+      {
+        "key": "b",
+        "text": "Transporte de Veículos Desportivos Especiais."
+      },
+      {
+        "key": "c",
+        "text": "Transporte de Velocidade em Desporto."
+      }
+    ],
+    "correct_answer_key": "a"
+  },
+  {
+    "question_id": 156,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla TCC:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Transporte de Cargas Congeladas."
+      },
+      {
+        "key": "b",
+        "text": "Transporte Coletivo de Crianças."
+      },
+      {
+        "key": "c",
+        "text": "Transporte de Carroçaria Comercial."
+      }
+    ],
+    "correct_answer_key": "c"
+  },
+  {
+    "question_id": 157,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla AMT:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Autoridade de Mobilidade e Transportes."
+      },
+      {
+        "key": "b",
+        "text": "Agência Marítima e Terrestre."
+      },
+      {
+        "key": "c",
+        "text": "Associação de Motoristas de Transportes."
+      }
+    ],
+    "correct_answer_key": "a"
+  },
+  {
+    "question_id": 158,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla IMT, I.P.:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Instituto de Mobilidade e dos Transportes, I.P."
+      },
+      {
+        "key": "b",
+        "text": "Instituto Municipal de Turismo, I.P."
+      },
+      {
+        "key": "c",
+        "text": "Instituto de Motivação para o Trabalho, I.P."
+      }
+    ],
+    "correct_answer_key": "a"
+  },
+  {
+    "question_id": 159,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla OCS:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Órgãos de Consulta e Supervisão."
+      },
+      {
+        "key": "b",
+        "text": "Organização Coletiva de Segurança."
+      },
+      {
+        "key": "c",
+        "text": "Obras e Construção Sustentável."
+      }
+    ],
+    "correct_answer_key": "b"
+  },
+  {
+    "question_id": 160,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla AM:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Abertura de Mercado."
+      },
+      {
+        "key": "b",
+        "text": "Auto-Motivação."
+      },
+      {
+        "key": "c",
+        "text": "Autoridade Municipal."
+      }
+    ],
+    "correct_answer_key": "a"
+  },
+  {
+    "question_id": 161,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla TVDE:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Transporte em Veículo Descaracterizado a partir de Plataforma Eletrónica."
+      },
+      {
+        "key": "b",
+        "text": "Transporte de Veículos Desportivos Especiais."
+      },
+      {
+        "key": "c",
+        "text": "Transporte de Velocidade em Desporto."
+      }
+    ],
+    "correct_answer_key": "c"
+  },
+  {
+    "question_id": 162,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla TCC:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Transporte de Cargas Congeladas."
+      },
+      {
+        "key": "b",
+        "text": "Transporte Coletivo de Crianças."
+      },
+      {
+        "key": "c",
+        "text": "Transporte de Carroçaria Comercial."
+      }
+    ],
+    "correct_answer_key": "b"
+  },
+  {
+    "question_id": 163,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla AMT:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Autoridade de Mobilidade e Transportes."
+      },
+      {
+        "key": "b",
+        "text": "Agência Marítima e Terrestre."
+      },
+      {
+        "key": "c",
+        "text": "Associação de Motoristas de Transportes."
+      }
+    ],
+    "correct_answer_key": "c"
+  },
+  {
+    "question_id": 164,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla IMT, I.P.:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Instituto de Mobilidade e dos Transportes, I.P."
+      },
+      {
+        "key": "b",
+        "text": "Instituto Municipal de Turismo, I.P."
+      },
+      {
+        "key": "c",
+        "text": "Instituto de Motivação para o Trabalho, I.P."
+      }
+    ],
+    "correct_answer_key": "b"
+  },
+  {
+    "question_id": 165,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla OCS:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Organização Coletiva de Segurança."
+      },
+      {
+        "key": "b",
+        "text": "Obras e Construção Sustentável."
+      },
+      {
+        "key": "c",
+        "text": "Órgãos de Consulta e Supervisão."
+      }
+    ],
+    "correct_answer_key": "b"
+  },
+  {
+    "question_id": 166,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla AM:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Auto-Motivação."
+      },
+      {
+        "key": "b",
+        "text": "Abertura de Mercado."
+      },
+      {
+        "key": "c",
+        "text": "Autoridade Municipal."
+      }
+    ],
+    "correct_answer_key": "c"
+  },
+  {
+    "question_id": 167,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla TVDE:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Transporte em Veículo Descaracterizado a partir de Plataforma Eletrónica."
+      },
+      {
+        "key": "b",
+        "text": "Transporte de Veículos Desportivos Especiais."
+      },
+      {
+        "key": "c",
+        "text": "Transporte de Velocidade em Desporto."
+      }
+    ],
+    "correct_answer_key": "b"
+  },
+  {
+    "question_id": 168,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla TCC:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Transporte de Cargas Congeladas."
+      },
+      {
+        "key": "b",
+        "text": "Transporte Coletivo de Crianças."
+      },
+      {
+        "key": "c",
+        "text": "Transporte de Carroçaria Comercial."
+      }
+    ],
+    "correct_answer_key": "c"
+  },
+  {
+    "question_id": 169,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla AMT:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Autoridade de Mobilidade e Transportes."
+      },
+      {
+        "key": "b",
+        "text": "Agência Marítima e Terrestre."
+      },
+      {
+        "key": "c",
+        "text": "Associação de Motoristas de Transportes."
+      }
+    ],
+    "correct_answer_key": "b"
+  },
+  {
+    "question_id": 170,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla IMT, I.P.:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Instituto de Mobilidade e dos Transportes, I.P."
+      },
+      {
+        "key": "b",
+        "text": "Instituto Municipal de Turismo, I.P."
+      },
+      {
+        "key": "c",
+        "text": "Instituto de Motivação para o Trabalho, I.P."
+      }
+    ],
+    "correct_answer_key": "b"
+  },
+  {
+    "question_id": 171,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla OCS:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Organização Coletiva de Segurança."
+      },
+      {
+        "key": "b",
+        "text": "Obras e Construção Sustentável."
+      },
+      {
+        "key": "c",
+        "text": "Órgãos de Consulta e Supervisão."
+      }
+    ],
+    "correct_answer_key": "c"
+  },
+  {
+    "question_id": 172,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla AM:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Auto-Motivação."
+      },
+      {
+        "key": "b",
+        "text": "Abertura de Mercado."
+      },
+      {
+        "key": "c",
+        "text": "Autoridade Municipal."
+      }
+    ],
+    "correct_answer_key": "a"
+  },
+  {
+    "question_id": 173,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla TVDE:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Transporte em Veículo Descaracterizado a partir de Plataforma Eletrónica."
+      },
+      {
+        "key": "b",
+        "text": "Transporte de Veículos Desportivos Especiais."
+      },
+      {
+        "key": "c",
+        "text": "Transporte de Velocidade em Desporto."
+      }
+    ],
+    "correct_answer_key": "b"
+  },
+  {
+    "question_id": 174,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla TCC:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Transporte de Cargas Congeladas."
+      },
+      {
+        "key": "b",
+        "text": "Transporte Coletivo de Crianças."
+      },
+      {
+        "key": "c",
+        "text": "Transporte de Carroçaria Comercial."
+      }
+    ],
+    "correct_answer_key": "a"
+  },
+  {
+    "question_id": 175,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla AMT:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Autoridade de Mobilidade e Transportes."
+      },
+      {
+        "key": "b",
+        "text": "Agência Marítima e Terrestre."
+      },
+      {
+        "key": "c",
+        "text": "Associação de Motoristas de Transportes."
+      }
+    ],
+    "correct_answer_key": "b"
+  },
+  {
+    "question_id": 176,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla IMT, I.P.:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Instituto de Mobilidade e dos Transportes, I.P."
+      },
+      {
+        "key": "b",
+        "text": "Instituto Municipal de Turismo, I.P."
+      },
+      {
+        "key": "c",
+        "text": "Instituto de Motivação para o Trabalho, I.P."
+      }
+    ],
+    "correct_answer_key": "c"
+  },
+  {
+    "question_id": 177,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla OCS:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Órgãos de Consulta e Supervisão."
+      },
+      {
+        "key": "b",
+        "text": "Organização Coletiva de Segurança."
+      },
+      {
+        "key": "c",
+        "text": "Obras e Construção Sustentável."
+      }
+    ],
+    "correct_answer_key": "a"
+  },
+  {
+    "question_id": 178,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla AM:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Abertura de Mercado."
+      },
+      {
+        "key": "b",
+        "text": "Auto-Motivação."
+      },
+      {
+        "key": "c",
+        "text": "Autoridade Municipal."
+      }
+    ],
+    "correct_answer_key": "a"
+  },
+  {
+    "question_id": 179,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla TVDE:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Transporte em Veículo Descaracterizado a partir de Plataforma Eletrónica."
+      },
+      {
+        "key": "b",
+        "text": "Transporte de Veículos Desportivos Especiais."
+      },
+      {
+        "key": "c",
+        "text": "Transporte de Velocidade em Desporto."
+      }
+    ],
+    "correct_answer_key": "b"
+  },
+  {
+    "question_id": 180,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla TCC:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Transporte de Cargas Congeladas."
+      },
+      {
+        "key": "b",
+        "text": "Transporte Coletivo de Crianças."
+      },
+      {
+        "key": "c",
+        "text": "Transporte de Carroçaria Comercial."
+      }
+    ],
+    "correct_answer_key": "c"
+  },
+  {
+    "question_id": 181,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla AMT:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Autoridade de Mobilidade e Transportes."
+      },
+      {
+        "key": "b",
+        "text": "Agência Marítima e Terrestre."
+      },
+      {
+        "key": "c",
+        "text": "Associação de Motoristas de Transportes."
+      }
+    ],
+    "correct_answer_key": "a"
+  },
+  {
+    "question_id": 182,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla IMT, I.P.:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Instituto de Mobilidade e dos Transportes, I.P."
+      },
+      {
+        "key": "b",
+        "text": "Instituto Municipal de Turismo, I.P."
+      },
+      {
+        "key": "c",
+        "text": "Instituto de Motivação para o Trabalho, I.P."
+      }
+    ],
+    "correct_answer_key": "a"
+  },
+  {
+    "question_id": 183,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla OCS:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Organização Coletiva de Segurança."
+      },
+      {
+        "key": "b",
+        "text": "Obras e Construção Sustentável."
+      },
+      {
+        "key": "c",
+        "text": "Órgãos de Consulta e Supervisão."
+      }
+    ],
+    "correct_answer_key": "c"
+  },
+  {
+    "question_id": 184,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla AM:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Auto-Motivação."
+      },
+      {
+        "key": "b",
+        "text": "Abertura de Mercado."
+      },
+      {
+        "key": "c",
+        "text": "Autoridade Municipal."
+      }
+    ],
+    "correct_answer_key": "c"
+  },
+  {
+    "question_id": 185,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla TVDE:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Transporte em Veículo Descaracterizado a partir de Plataforma Eletrónica."
+      },
+      {
+        "key": "b",
+        "text": "Transporte de Veículos Desportivos Especiais."
+      },
+      {
+        "key": "c",
+        "text": "Transporte de Velocidade em Desporto."
+      }
+    ],
+    "correct_answer_key": "a"
+  },
+  {
+    "question_id": 186,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla TCC:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Transporte de Cargas Congeladas."
+      },
+      {
+        "key": "b",
+        "text": "Transporte Coletivo de Crianças."
+      },
+      {
+        "key": "c",
+        "text": "Transporte de Carroçaria Comercial."
+      }
+    ],
+    "correct_answer_key": "c"
+  },
+  {
+    "question_id": 187,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla AMT:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Autoridade de Mobilidade e Transportes."
+      },
+      {
+        "key": "b",
+        "text": "Agência Marítima e Terrestre."
+      },
+      {
+        "key": "c",
+        "text": "Associação de Motoristas de Transportes."
+      }
+    ],
+    "correct_answer_key": "c"
+  },
+  {
+    "question_id": 188,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla IMT, I.P.:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Instituto de Mobilidade e dos Transportes, I.P."
+      },
+      {
+        "key": "b",
+        "text": "Instituto Municipal de Turismo, I.P."
+      },
+      {
+        "key": "c",
+        "text": "Instituto de Motivação para o Trabalho, I.P."
+      }
+    ],
+    "correct_answer_key": "b"
+  },
+  {
+    "question_id": 189,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla OCS:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Organização Coletiva de Segurança."
+      },
+      {
+        "key": "b",
+        "text": "Obras e Construção Sustentável."
+      },
+      {
+        "key": "c",
+        "text": "Órgãos de Consulta e Supervisão."
+      }
+    ],
+    "correct_answer_key": "c"
+  },
+  {
+    "question_id": 190,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla AM:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Abertura de Mercado."
+      },
+      {
+        "key": "b",
+        "text": "Auto-Motivação."
+      },
+      {
+        "key": "c",
+        "text": "Autoridade Municipal."
+      }
+    ],
+    "correct_answer_key": "b"
+  },
+  {
+    "question_id": 191,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla TVDE:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Transporte em Veículo Descaracterizado a partir de Plataforma Eletrónica."
+      },
+      {
+        "key": "b",
+        "text": "Transporte de Veículos Desportivos Especiais."
+      },
+      {
+        "key": "c",
+        "text": "Transporte de Velocidade em Desporto."
+      }
+    ],
+    "correct_answer_key": "b"
+  },
+  {
+    "question_id": 192,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla TCC:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Transporte de Cargas Congeladas."
+      },
+      {
+        "key": "b",
+        "text": "Transporte Coletivo de Crianças."
+      },
+      {
+        "key": "c",
+        "text": "Transporte de Carroçaria Comercial."
+      }
+    ],
+    "correct_answer_key": "a"
+  },
+  {
+    "question_id": 193,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla AMT:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Autoridade de Mobilidade e Transportes."
+      },
+      {
+        "key": "b",
+        "text": "Agência Marítima e Terrestre."
+      },
+      {
+        "key": "c",
+        "text": "Associação de Motoristas de Transportes."
+      }
+    ],
+    "correct_answer_key": "b"
+  },
+  {
+    "question_id": 194,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla IMT, I.P.:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Instituto de Mobilidade e dos Transportes, I.P."
+      },
+      {
+        "key": "b",
+        "text": "Instituto Municipal de Turismo, I.P."
+      },
+      {
+        "key": "c",
+        "text": "Instituto de Motivação para o Trabalho, I.P."
+      }
+    ],
+    "correct_answer_key": "c"
+  },
+  {
+    "question_id": 195,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla OCS:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Organização Coletiva de Segurança."
+      },
+      {
+        "key": "b",
+        "text": "Obras e Construção Sustentável."
+      },
+      {
+        "key": "c",
+        "text": "Órgãos de Consulta e Supervisão."
+      }
+    ],
+    "correct_answer_key": "c"
+  },
+  {
+    "question_id": 196,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla AM:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Auto-Motivação."
+      },
+      {
+        "key": "b",
+        "text": "Abertura de Mercado."
+      },
+      {
+        "key": "c",
+        "text": "Autoridade Municipal."
+      }
+    ],
+    "correct_answer_key": "c"
+  },
+  {
+    "question_id": 197,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla TVDE:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Transporte em Veículo Descaracterizado a partir de Plataforma Eletrónica."
+      },
+      {
+        "key": "b",
+        "text": "Transporte de Veículos Desportivos Especiais."
+      },
+      {
+        "key": "c",
+        "text": "Transporte de Velocidade em Desporto."
+      }
+    ],
+    "correct_answer_key": "a"
+  },
+  {
+    "question_id": 198,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla TCC:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Transporte de Cargas Congeladas."
+      },
+      {
+        "key": "b",
+        "text": "Transporte Coletivo de Crianças."
+      },
+      {
+        "key": "c",
+        "text": "Transporte de Carroçaria Comercial."
+      }
+    ],
+    "correct_answer_key": "a"
+  },
+  {
+    "question_id": 199,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla AMT:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Autoridade de Mobilidade e Transportes."
+      },
+      {
+        "key": "b",
+        "text": "Agência Marítima e Terrestre."
+      },
+      {
+        "key": "c",
+        "text": "Associação de Motoristas de Transportes."
+      }
+    ],
+    "correct_answer_key": "c"
+  },
+  {
+    "question_id": 200,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla IMT, I.P.:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Instituto de Mobilidade e dos Transportes, I.P."
+      },
+      {
+        "key": "b",
+        "text": "Instituto Municipal de Turismo, I.P."
+      },
+      {
+        "key": "c",
+        "text": "Instituto de Motivação para o Trabalho, I.P."
+      }
+    ],
+    "correct_answer_key": "a"
+  },
+  {
+    "question_id": 201,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla OCS:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Organização Coletiva de Segurança."
+      },
+      {
+        "key": "b",
+        "text": "Obras e Construção Sustentável."
+      },
+      {
+        "key": "c",
+        "text": "Órgãos de Consulta e Supervisão."
+      }
+    ],
+    "correct_answer_key": "a"
+  },
+  {
+    "question_id": 202,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla AM:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Auto-Motivação."
+      },
+      {
+        "key": "b",
+        "text": "Abertura de Mercado."
+      },
+      {
+        "key": "c",
+        "text": "Autoridade Municipal."
+      }
+    ],
+    "correct_answer_key": "a"
+  },
+  {
+    "question_id": 203,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla TVDE:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Transporte em Veículo Descaracterizado a partir de Plataforma Eletrónica."
+      },
+      {
+        "key": "b",
+        "text": "Transporte de Veículos Desportivos Especiais."
+      },
+      {
+        "key": "c",
+        "text": "Transporte de Velocidade em Desporto."
+      }
+    ],
+    "correct_answer_key": "c"
+  },
+  {
+    "question_id": 204,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla TCC:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Transporte de Cargas Congeladas."
+      },
+      {
+        "key": "b",
+        "text": "Transporte Coletivo de Crianças."
+      },
+      {
+        "key": "c",
+        "text": "Transporte de Carroçaria Comercial."
+      }
+    ],
+    "correct_answer_key": "c"
+  },
+  {
+    "question_id": 205,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla AMT:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Autoridade de Mobilidade e Transportes."
+      },
+      {
+        "key": "b",
+        "text": "Agência Marítima e Terrestre."
+      },
+      {
+        "key": "c",
+        "text": "Associação de Motoristas de Transportes."
+      }
+    ],
+    "correct_answer_key": "a"
+  },
+  {
+    "question_id": 206,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla IMT, I.P.:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Instituto de Mobilidade e dos Transportes, I.P."
+      },
+      {
+        "key": "b",
+        "text": "Instituto Municipal de Turismo, I.P."
+      },
+      {
+        "key": "c",
+        "text": "Instituto de Motivação para o Trabalho, I.P."
+      }
+    ],
+    "correct_answer_key": "a"
+  },
+  {
+    "question_id": 207,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla OCS:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Órgãos de Consulta e Supervisão."
+      },
+      {
+        "key": "b",
+        "text": "Organização Coletiva de Segurança."
+      },
+      {
+        "key": "c",
+        "text": "Obras e Construção Sustentável."
+      }
+    ],
+    "correct_answer_key": "a"
+  },
+  {
+    "question_id": 208,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla AM:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Abertura de Mercado."
+      },
+      {
+        "key": "b",
+        "text": "Auto-Motivação."
+      },
+      {
+        "key": "c",
+        "text": "Autoridade Municipal."
+      }
+    ],
+    "correct_answer_key": "a"
+  },
+  {
+    "question_id": 209,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla TVDE:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Transporte em Veículo Descaracterizado a partir de Plataforma Eletrónica."
+      },
+      {
+        "key": "b",
+        "text": "Transporte de Veículos Desportivos Especiais."
+      },
+      {
+        "key": "c",
+        "text": "Transporte de Velocidade em Desporto."
+      }
+    ],
+    "correct_answer_key": "b"
+  },
+  {
+    "question_id": 210,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla TCC:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Transporte de Cargas Congeladas."
+      },
+      {
+        "key": "b",
+        "text": "Transporte Coletivo de Crianças."
+      },
+      {
+        "key": "c",
+        "text": "Transporte de Carroçaria Comercial."
+      }
+    ],
+    "correct_answer_key": "c"
+  },
+  {
+    "question_id": 211,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla AMT:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Autoridade de Mobilidade e Transportes."
+      },
+      {
+        "key": "b",
+        "text": "Agência Marítima e Terrestre."
+      },
+      {
+        "key": "c",
+        "text": "Associação de Motoristas de Transportes."
+      }
+    ],
+    "correct_answer_key": "a"
+  },
+  {
+    "question_id": 212,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla IMT, I.P.:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Instituto de Mobilidade e dos Transportes, I.P."
+      },
+      {
+        "key": "b",
+        "text": "Instituto Municipal de Turismo, I.P."
+      },
+      {
+        "key": "c",
+        "text": "Instituto de Motivação para o Trabalho, I.P."
+      }
+    ],
+    "correct_answer_key": "b"
+  },
+  {
+    "question_id": 213,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla OCS:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Organização Coletiva de Segurança."
+      },
+      {
+        "key": "b",
+        "text": "Obras e Construção Sustentável."
+      },
+      {
+        "key": "c",
+        "text": "Órgãos de Consulta e Supervisão."
+      }
+    ],
+    "correct_answer_key": "c"
+  },
+  {
+    "question_id": 214,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla AM:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Auto-Motivação."
+      },
+      {
+        "key": "b",
+        "text": "Abertura de Mercado."
+      },
+      {
+        "key": "c",
+        "text": "Autoridade Municipal."
+      }
+    ],
+    "correct_answer_key": "a"
+  },
+  {
+    "question_id": 215,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla TVDE:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Transporte em Veículo Descaracterizado a partir de Plataforma Eletrónica."
+      },
+      {
+        "key": "b",
+        "text": "Transporte de Veículos Desportivos Especiais."
+      },
+      {
+        "key": "c",
+        "text": "Transporte de Velocidade em Desporto."
+      }
+    ],
+    "correct_answer_key": "a"
+  },
+  {
+    "question_id": 216,
+    "category": "CMTVDE Topics",
+    "question_text": "O que significa a sigla TCC:",
+    "options": [
+      {
+        "key": "a",
+        "text": "Transporte de Cargas Congeladas."
+      },
+      {
+        "key": "b",
+        "text": "Transporte Coletivo de Crianças."
+      },
+      {
+        "key": "c",
+        "text": "Transporte de Carroçaria Comercial."
+      }
+    ],
+    "correct_answer_key": "b"
+  }
+]
+
+        /* ------------- RANDOMIZE QUESTIONS -------------- */
+        function getRandomQuestions(count) {
+            const arr = [...allQuestionsSource];
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr.slice(0, count);
+        }
+
+        let questions = [];
+        let currentIndex = 0;
+        let userAnswers = {};
+
+        /* ------------- RENDER QUESTION -------------- */
+        function renderQuestion() {
+            const q = questions[currentIndex];
+
+            let html = `
+                <h2 class="text-xl font-semibold text-gray-800 mb-4">
+                    ${currentIndex + 1}. ${q.question_text}
+                </h2>
+                <div class="space-y-3">
+            `;
+
+            q.options.forEach(option => {
+                const selected = userAnswers[q.question_id] === option.key ? "option-selected" : "";
+
+                html += `
+                    <button 
+                        onclick="selectOption('${q.question_id}', '${option.key}')"
+                        class="option-button w-full text-left px-4 py-3 border rounded-lg bg-gray-50 hover:bg-gray-100 ${selected}">
+                        <strong>${option.key.toUpperCase()}.</strong> ${option.text}
+                    </button>
+                `;
+            });
+
+            html += `</div>`;
+            document.getElementById("question-content").innerHTML = html;
+
+            updateIndexButtons();
+            updateNavigationButtons();
+        }
+
+        /* ------------- SELECT OPTION -------------- */
+        function selectOption(qid, key) {
+            userAnswers[qid] = key;
+            renderQuestion();
+        }
+
+        /* ------------- NAVIGATION -------------- */
+        function handleNavigation(step) {
+            currentIndex += step;
+
+            if (currentIndex < 0) currentIndex = 0;
+            if (currentIndex >= questions.length) currentIndex = questions.length - 1;
+
+            renderQuestion();
+        }
+
+        /* ------------- UPDATE BUTTONS -------------- */
+        function updateNavigationButtons() {
+            document.getElementById("prev-btn").disabled = currentIndex === 0;
+            document.getElementById("next-btn").disabled = currentIndex === questions.length - 1;
+
+            if (currentIndex === questions.length - 1)
+                document.getElementById("finish-btn").classList.remove("hidden");
+            else
+                document.getElementById("finish-btn").classList.add("hidden");
+        }
+
+        /* ------------- INDEX BUTTONS -------------- */
+        function updateIndexButtons() {
+            const container = document.getElementById("question-index-container");
+            container.innerHTML = "";
+
+            questions.forEach((q, i) => {
+                const btn = document.createElement("button");
+
+                btn.className =
+                    "px-3 py-1 rounded border " +
+                    (i === currentIndex
+                        ? "bg-indigo-600 text-white"
+                        : userAnswers[q.question_id]
+                            ? "bg-green-200 text-green-700"
+                            : "bg-gray-200 text-gray-700");
+
+                btn.textContent = i + 1;
+                btn.onclick = () => { currentIndex = i; renderQuestion(); };
+
+                container.appendChild(btn);
+            });
+        }
+
+        /* ------------- FINISH QUIZ -------------- */
+        function finishQuiz() {
+            let score = 0;
+
+            questions.forEach(q => {
+                if (userAnswers[q.question_id] === q.correct_answer_key) score++;
+            });
+
+            document.getElementById("score-display").textContent = `${score}/${questions.length}`;
+
+            const feedback =
+                score === questions.length ? "Perfect!"
+                : score >= questions.length * 0.7 ? "Great!"
+                : score >= questions.length * 0.5 ? "Good"
+                : "Needs Improvement";
+
+            document.getElementById("feedback-message").textContent = feedback;
+
+            renderReview();
+            document.getElementById("quiz-view").classList.add("hidden");
+            document.getElementById("results-view").classList.remove("hidden");
+        }
+
+        /* ------------- REVIEW MODE -------------- */
+        function renderReview() {
+            const box = document.getElementById("review-list");
+            box.innerHTML = "";
+
+            questions.forEach((q, i) => {
+                const user = userAnswers[q.question_id];
+                const correct = q.correct_answer_key;
+
+                let optionsHtml = "";
+
+                q.options.forEach(op => {
+                    let cls = "border p-2 rounded mb-1";
+
+                    if (op.key === correct) cls = "option-correct";
+                    else if (op.key === user) cls = "option-incorrect";
+
+                    optionsHtml += `
+                        <div class="${cls}"><strong>${op.key.toUpperCase()}.</strong> ${op.text}</div>
+                    `;
+                });
+
+                box.innerHTML += `
+                    <div class="p-4 border rounded-lg">
+                        <h4 class="font-semibold mb-2">${i + 1}. ${q.question_text}</h4>
+                        ${optionsHtml}
+                    </div>
+                `;
+            });
+        }
+
+        /* ------------- INITIALIZE QUIZ -------------- */
+        function startQuiz() {
+            questions = getRandomQuestions(30);
+            renderQuestion();
+        }
+
+        startQuiz();
+    </script>
+</body>
+</html>
